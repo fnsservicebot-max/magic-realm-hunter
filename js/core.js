@@ -2,7 +2,7 @@
 // V_0612 — 即時戰鬥（每秒一回合）
 
 const GameCore = {
-  VERSION: 'V_0623',  // 顯示在頁面標題與 H1
+  VERSION: 'V_0624',  // 顯示在頁面標題與 H1
   state: {
     hunter: null,
     materials: {},
@@ -20,7 +20,8 @@ const GameCore = {
     playerImg: 'assets/weapons/sword.png',
     isDead: false,
     deathCount: 0,
-    battle: { active: false, monster: null, timer: null }
+    battle: { active: false, monster: null, timer: null },
+    autoPotion: { enabled: false, threshold: 30 }  // V_0624 自動補血設定
   },
 
   init() {
@@ -222,6 +223,18 @@ const GameCore = {
       // 即時更新 UI（HP 條等）
       if (typeof UI !== 'undefined' && UI.updateStats) {
         UI.updateStats(this.state);
+      }
+
+      // 自動補血（V_0624 — 怪物反擊後檢查）
+      if (this.state.hunter.hp > 0) {
+        const autoResult = this.tryAutoPotion();
+        if (autoResult && autoResult.auto && typeof UI !== 'undefined' && UI.addBattleLog) {
+          UI.addBattleLog(
+            `🧪⚡ 自動補血！HP ${autoResult.hpPct}% 觸發，使用 ${autoResult.potion.name_zh} 回復 ${autoResult.healed} HP（花費 ${autoResult.spent} 金幣）`,
+            'auto-heal'
+          );
+          if (typeof UI.updateStats === 'function') UI.updateStats(this.state);
+        }
       }
 
       if (this.state.hunter.hp <= 0) {
@@ -426,6 +439,30 @@ const GameCore = {
     const healed = h.hp - before;
     this.save();
     return { ok: true, healed, spent: potion.cost, potion };
+  },
+
+  // 自動補血（HP 百分比低於門檻時，自動買負擔得起中最大治療的藥水）
+  // 優先序：large → medium → small（買得起的最大瓶優先，一次回更多比較安全）
+  tryAutoPotion() {
+    const cfg = this.state.autoPotion || { enabled: false, threshold: 30 };
+    if (!cfg.enabled) return null;
+    const h = this.state.hunter;
+    if (!h || h.hp >= h.maxHp) return null;
+    const hpPct = (h.hp / h.maxHp) * 100;
+    if (hpPct >= cfg.threshold) return null;
+
+    // 優先序：大型 > 中型 > 小型（負擔得起的第一個）
+    const order = ['large', 'medium', 'small'];
+    for (const id of order) {
+      const potion = this.potions[id];
+      if (h.gold >= potion.cost) {
+        const result = this.buyPotion(id);
+        if (result.ok) {
+          return { ...result, auto: true, hpPct: Math.round(hpPct) };
+        }
+      }
+    }
+    return null;  // 金幣不夠
   },
 
   switchArea(areaId) {

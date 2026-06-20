@@ -15,6 +15,8 @@ const UI = {
       const headerEl = document.getElementById('appVersionHeader');
       if (headerEl) headerEl.textContent = v;
     }
+    // 自動補血 UI 初始化（V_0624）
+    this.updateAutoPotionUI();
   },
 
   bindEvents() {
@@ -37,6 +39,36 @@ const UI = {
       if (e.target.id === 'tabEquipment') this.showTab('equipment');
       if (e.target.id === 'tabLog') this.showTab('log');
     });
+    // 自動補血設定（V_0624）
+    const autoChk = document.getElementById('autoPotionEnabled');
+    if (autoChk) {
+      autoChk.addEventListener('change', () => {
+        GameCore.state.autoPotion = GameCore.state.autoPotion || { enabled: false, threshold: 30 };
+        GameCore.state.autoPotion.enabled = autoChk.checked;
+        GameCore.save();
+        this.updateAutoPotionUI();
+      });
+    }
+    const autoSel = document.getElementById('autoPotionThreshold');
+    if (autoSel) {
+      autoSel.addEventListener('change', () => {
+        GameCore.state.autoPotion = GameCore.state.autoPotion || { enabled: false, threshold: 30 };
+        GameCore.state.autoPotion.threshold = parseInt(autoSel.value, 10) || 30;
+        GameCore.save();
+      });
+    }
+  },
+
+  // 從 GameCore.state.autoPotion 同步 UI 狀態
+  updateAutoPotionUI() {
+    const cfg = (GameCore.state && GameCore.state.autoPotion) || { enabled: false, threshold: 30 };
+    const chk = document.getElementById('autoPotionEnabled');
+    const sel = document.getElementById('autoPotionThreshold');
+    if (chk) chk.checked = !!cfg.enabled;
+    if (sel) {
+      sel.value = String(cfg.threshold);
+      sel.disabled = !cfg.enabled;
+    }
   },
 
   bindCombatCallbacks() {
