@@ -386,6 +386,8 @@ const UI = {
       p.textContent = log.text;
       container.appendChild(p);
     });
+    // 自動捲到最頂端（最新訊息在最上方）
+    container.scrollTop = 0;
   },
 
   // ========== 區域切換 ==========

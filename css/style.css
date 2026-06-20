@@ -567,8 +567,27 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ========== 戰鬥日誌 ========== */
 .log-list {
-  max-height: 400px;
-  overflow-y: auto;
+  max-height: 240px;        /* 約 10 行高度 (24px × 10) */
+  overflow-y: auto;         /* 往上捲動看歷史紀錄 */
+  scrollbar-width: thin;    /* Firefox */
+  scrollbar-color: var(--border) var(--bg-dark);  /* Firefox */
+}
+
+.log-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.log-list::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+
+.log-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.log-list::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
 }
 
 .log-entry {
