@@ -123,6 +123,10 @@ const GameCore = {
       UI.updateMonsterImg(monster);
     }
     const result = Combat.simulate(this.state.hunter, monster);
+
+    // 寫回玩家實際受到的傷害（combat 內計算但沒寫回 state）
+    this.state.hunter.hp = Math.max(0, this.state.hunter.hp - result.damageTaken);
+
     if (result.victory) {
       this.onVictory(monster, result);
     } else {
