@@ -165,6 +165,23 @@ const UI = {
     }
   },
 
+  // 更新怪物血條
+  updateMonsterHp(monster) {
+    const bar = document.getElementById('monsterHpBar');
+    const text = document.getElementById('monsterHpText');
+    if (!bar || !text || !monster) return;
+    const pct = Math.max(0, Math.min(100, (monster.hp / monster.maxHp) * 100));
+    bar.style.width = `${pct}%`;
+    text.textContent = `${Math.max(0, Math.floor(monster.hp))}/${monster.maxHp}`;
+    // 顏色階段
+    bar.classList.remove('low', 'critical');
+    if (pct <= 25) {
+      bar.classList.add('critical');
+    } else if (pct <= 50) {
+      bar.classList.add('low');
+    }
+  },
+
   updateStats(state) {
     if (!state.hunter) return;
     const h = state.hunter;

@@ -440,6 +440,47 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   padding: 4px;
 }
 
+/* ========== 怪物血條 ========== */
+.monster-info {
+  width: 100%;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.bar-monster {
+  height: 10px;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-top: 0;
+}
+.bar-monster-hp {
+  height: 100%;
+  background: linear-gradient(90deg, #2ecc71, #27ae60);
+  transition: width 0.3s ease, background 0.3s;
+  width: 100%;
+}
+.bar-monster-hp.low {
+  background: linear-gradient(90deg, #e67e22, #d35400);
+}
+.bar-monster-hp.critical {
+  background: linear-gradient(90deg, #e74c3c, #c0392b);
+  animation: pulse-critical 0.8s infinite;
+}
+.monster-hp-text {
+  text-align: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  font-family: 'Press Start 2P', monospace;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+@keyframes pulse-critical {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
 .monster-side .battle-img {
   width: 140px;
   height: 140px;

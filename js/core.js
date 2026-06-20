@@ -139,6 +139,9 @@ const GameCore = {
     if (typeof UI !== 'undefined' && UI.updateMonsterImg) {
       UI.updateMonsterImg(monster);
     }
+    if (typeof UI !== 'undefined' && UI.updateMonsterHp) {
+      UI.updateMonsterHp(monster);
+    }
     if (typeof UI !== 'undefined' && UI.addBattleLog) {
       const title = monster.isBoss
         ? `👑 ${I18n.t('mon_' + monster.id, monster.name_zh)}（${I18n.t('boss')}）`
@@ -179,6 +182,9 @@ const GameCore = {
       } else {
         monster.hp = Math.max(0, monster.hp - pResult.dmg);
         if (Combat.onMonsterHit) Combat.onMonsterHit(monster, pResult.dmg, pResult.crit);
+        if (typeof UI !== 'undefined' && UI.updateMonsterHp) {
+          UI.updateMonsterHp(monster);
+        }
         if (typeof UI !== 'undefined' && UI.addBattleLog) {
           UI.addBattleLog(pResult.crit ? `💥 暴擊！攻擊：${pResult.dmg} 傷害` : `⚔️ 攻擊：${pResult.dmg} 傷害`, pResult.crit ? 'crit' : 'attack');
         }

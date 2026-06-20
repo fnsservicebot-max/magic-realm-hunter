@@ -105,7 +105,7 @@ const Monsters = {
       const areaBosses = this.bosses.filter(b => b.area === areaId);
       if (areaBosses.length > 0) {
         const b = areaBosses[Math.floor(Math.random() * areaBosses.length)];
-        return { ...b, isBoss: true, critRate: 0.10, critDmg: 1.8, dodgeRate: 0.05 };
+        return { ...b, isBoss: true, maxHp: b.hp, critRate: 0.10, critDmg: 1.8, dodgeRate: 0.05 };
       }
     }
     // 一般魔物（依等級調整暴擊率，高等魔物更會暴擊）
@@ -113,6 +113,7 @@ const Monsters = {
     const base = { ...area.monsters[Math.floor(Math.random() * area.monsters.length)], isBoss: false };
     return {
       ...base,
+      maxHp: base.hp,  // V_0622 記錄初始 HP 用於血條
       critRate: 0.05 + Math.min(0.10, lv * 0.005),  // 5% 起，每級 +0.5%，最高 15%
       critDmg: 1.5,
       dodgeRate: 0.03 + Math.min(0.07, lv * 0.003)   // 3% 起，每級 +0.3%，最高 10%
