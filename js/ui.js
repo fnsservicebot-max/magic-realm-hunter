@@ -100,7 +100,7 @@ const UI = {
   },
 
   handleCreate() {
-    const name = document.getElementById('hunterName').value || '獵人';
+    const name = document.getElementById('hunterNameInput').value || '獵人';
     const weapon = document.querySelector('.weapon-card.selected');
     if (!weapon) {
       alert(I18n.t('select_weapon'));
