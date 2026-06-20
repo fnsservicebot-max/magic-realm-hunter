@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>魔境獵人 - Magic Realm Hunter</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>⚔️ 魔境獵人</h1>
+    <div class="controls">
+      <button id="langToggle">🌐 中/EN</button>
+      <button id="resetBtn">🔄 重置</button>
+    </div>
+  </header>
+
+  <!-- ========== 角色創建 ========== -->
+  <div id="createScreen">
+    <h2>🎮 創建你的獵人</h2>
+    <label>獵人名字：</label>
+    <input type="text" id="hunterName" placeholder="輸入名字..." maxlength="20">
+
+    <label>選擇武器：</label>
+    <div class="weapon-grid" id="weaponGrid"></div>
+
+    <button id="startBtn">開始冒險</button>
+  </div>
+
+  <!-- ========== 遊戲主畫面 ========== -->
+  <div id="gameScreen">
+    <div class="game-grid">
+      <!-- 左欄：狀態 + 區域 + 背包 -->
+      <div>
+        <div class="panel">
+          <h3>📊 狀態</h3>
+          <div class="stat-row"><span class="label">名字</span><span class="value" id="hunterName">-</span></div>
+          <div class="stat-row"><span class="label">等級</span><span class="value" id="hunterLevel">1</span></div>
+          <div class="stat-row"><span class="label">HP</span><span class="value" id="hunterHp">-</span></div>
+          <div class="bar"><div class="bar-fill bar-hp" id="hpBar"></div></div>
+          <div class="stat-row"><span class="label">攻擊</span><span class="value" id="hunterAtk">-</span></div>
+          <div class="stat-row"><span class="label">防禦</span><span class="value" id="hunterDef">-</span></div>
+          <div class="stat-row"><span class="label">金幣</span><span class="value" id="hunterGold">-</span></div>
+          <div class="stat-row"><span class="label">經驗</span><span class="value" id="hunterExp">-</span></div>
+          <div class="bar"><div class="bar-fill bar-exp" id="expBar"></div></div>
+          <div class="stat-row"><span class="label">技能點</span><span class="value" id="skillPoints">0</span></div>
+          <div class="stat-row"><span class="label">總擊殺</span><span class="value" id="totalKills">0</span></div>
+          <div class="stat-row"><span class="label">Boss擊殺</span><span class="value" id="bossKills">0</span></div>
+          <div class="stat-row"><span class="label">死亡次數</span><span class="value" id="deathCount">0</span></div>
+        </div>
+
+        <div class="panel" style="margin-top: 15px;">
+          <h3>🗺️ 棲息地</h3>
+          <div class="area-buttons" id="areaButtons"></div>
+          <div class="stat-row" style="margin-top: 10px;">
+            <span class="label">當前</span>
+            <span class="value" id="currentArea">-</span>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top: 15px;">
+          <h3>📦 素材背包</h3>
+          <div id="inventory"></div>
+          <button id="forgeBtn" style="margin-top: 10px; width: 100%;">🔨 打造裝備</button>
+        </div>
+      </div>
+
+      <!-- 中欄：戰鬥場景 + 分頁 -->
+      <div>
+        <div class="panel battle-panel">
+          <h3>⚔️ 戰鬥</h3>
+          <div id="battleArena" class="battle-arena">
+            <div class="player-side">
+              <img id="weaponImg" src="assets/weapons/sword.png" alt="weapon" class="battle-img">
+            </div>
+            <div class="vs-mark">⚔️ VS</div>
+            <div class="monster-side">
+              <img id="monsterImg" src="assets/monsters/wolf.png" alt="monster" class="battle-img">
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-bar">
+          <button id="tabBestiary" class="tab-btn active">📖 圖鑑</button>
+          <button id="tabEquipment" class="tab-btn">🔨 裝備</button>
+          <button id="tabLog" class="tab-btn">📜 日誌</button>
+        </div>
+
+        <div class="panel" style="margin-top: 0;">
+          <div id="panelBestiary" class="tab-panel">
+            <div id="bestiary"></div>
+          </div>
+          <div id="panelEquipment" class="tab-panel" style="display:none;">
+            <div id="equipmentList"></div>
+          </div>
+          <div id="panelLog" class="tab-panel" style="display:none;">
+            <div id="logList" class="log-list"></div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top: 15px;">
+          <h3>🌳 技能樹</h3>
+          <div class="skill-grid" id="skillTree"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 打造 Modal ========== -->
+  <div id="forgeModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <h2>🔨 打造裝備</h2>
+      <div id="equipmentList" class="forge-list"></div>
+      <button id="forgeClose" style="margin-top: 15px;">關閉</button>
+    </div>
+  </div>
+
+  <!-- ========== Boss 過場 ========== -->
+  <div id="bossOverlay" class="overlay" style="display:none;">
+    <div class="overlay-content">
+      <div class="warning-text">⚠️ BOSS 出現 ⚠️</div>
+      <img id="bossEncounterImg" src="" alt="boss" class="boss-encounter-img">
+      <div id="bossEncounterName" class="boss-encounter-name"></div>
+    </div>
+  </div>
+
+  <!-- ========== Boss 戰勝動畫 ========== -->
+  <div id="victoryOverlay" class="overlay" style="display:none;">
+    <div class="overlay-content victory-content">
+      <div class="victory-text">🏆 VICTORY 🏆</div>
+      <div id="victoryName" class="boss-encounter-name"></div>
+    </div>
+  </div>
+
+  <!-- ========== JS 載入 ========== -->
+  <script src="js/i18n.js"></script>
+  <script src="js/weapons.js"></script>
+  <script src="js/monsters.js"></script>
+  <script src="js/skills.js"></script>
+  <script src="js/equipment.js"></script>
+  <script src="js/combat.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/ui.js"></script>
+  <script>
+    (async () => {
+      await I18n.init();
+      renderWeaponGrid();
+      UI.init();
+      GameCore.init();
+      if (GameCore.state.hunter) {
+        UI.showGame();
+      }
+    })();
+
+    function renderWeaponGrid() {
+      const grid = document.getElementById('weaponGrid');
+      grid.innerHTML = '';
+      Weapons.all().forEach(w => {
+        const card = document.createElement('div');
+        card.className = 'weapon-card';
+        card.dataset.weapon = w.id;
+        card.innerHTML = `
+          <img src="assets/weapons/${w.id}.png" alt="${w.name_zh}" class="weapon-img">
+          <div class="name">${I18n.t('weapon_' + w.id, w.name_zh)}</div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+  </script>
+</body>
+</html>

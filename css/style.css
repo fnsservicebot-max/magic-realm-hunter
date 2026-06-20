@@ -1,0 +1,639 @@
+/* style.css — 魔境獵人 日系像素風格 V_0602 */
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-dark: #1a1a2e;
+  --bg-mid: #16213e;
+  --bg-light: #0f3460;
+  --accent: #e94560;
+  --gold: #f5b800;
+  --green: #2ecc71;
+  --blue: #3498db;
+  --purple: #9b59b6;
+  --text: #e0e0e0;
+  --text-dim: #888;
+  --border: #533483;
+  --pixel-border: 4px solid var(--border);
+}
+
+body {
+  font-family: 'Noto Sans TC', sans-serif;
+  background: var(--bg-dark);
+  color: var(--text);
+  min-height: 100vh;
+  background-image:
+    linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)),
+    repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255,255,255,0.02) 20px, rgba(255,255,255,0.02) 21px),
+    repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(255,255,255,0.02) 20px, rgba(255,255,255,0.02) 21px);
+  image-rendering: pixelated;
+}
+
+/* ========== 標題列 ========== */
+header {
+  background: var(--bg-mid);
+  border-bottom: var(--pixel-border);
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h1 {
+  font-family: 'Press Start 2P', monospace;
+  color: var(--gold);
+  font-size: 20px;
+  text-shadow: 3px 3px 0 var(--accent);
+  letter-spacing: 2px;
+}
+
+header .controls { display: flex; gap: 10px; }
+
+button {
+  font-family: 'Press Start 2P', monospace;
+  background: var(--bg-light);
+  color: var(--text);
+  border: 2px solid var(--border);
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.1s;
+}
+
+button:hover:not(:disabled) {
+  background: var(--accent);
+  transform: translate(-2px, -2px);
+  box-shadow: 2px 2px 0 var(--border);
+}
+
+button:active:not(:disabled) { transform: translate(0, 0); box-shadow: none; }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ========== 角色創建 ========== */
+#createScreen {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 30px;
+  background: var(--bg-mid);
+  border: var(--pixel-border);
+}
+
+#createScreen h2 {
+  font-family: 'Press Start 2P', monospace;
+  color: var(--gold);
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+#createScreen label {
+  display: block;
+  margin: 15px 0 8px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+#createScreen input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  background: var(--bg-dark);
+  color: var(--text);
+  border: 2px solid var(--border);
+  font-size: 14px;
+}
+
+.weapon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.weapon-card {
+  background: var(--bg-light);
+  border: 2px solid var(--border);
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.weapon-card:hover { transform: translateY(-2px); border-color: var(--gold); }
+.weapon-card.selected {
+  background: var(--accent);
+  border-color: var(--gold);
+  box-shadow: 0 0 10px var(--gold);
+}
+
+.weapon-card .weapon-img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  margin-bottom: 5px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.weapon-card .name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+}
+
+#startBtn {
+  width: 100%;
+  background: var(--green);
+  color: white;
+  font-size: 14px;
+  padding: 14px;
+  margin-top: 20px;
+}
+#startBtn:hover { background: #27ae60; }
+
+/* ========== 遊戲主畫面 ========== */
+#gameScreen { display: none; max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+.game-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 15px;
+}
+
+@media (max-width: 1100px) {
+  .game-grid { grid-template-columns: 1fr; }
+}
+
+.panel {
+  background: var(--bg-mid);
+  border: var(--pixel-border);
+  padding: 15px;
+}
+
+.panel h3 {
+  font-family: 'Press Start 2P', monospace;
+  color: var(--gold);
+  font-size: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+
+.panel h4 {
+  font-family: 'Press Start 2P', monospace;
+  color: var(--gold);
+  font-size: 11px;
+  margin: 12px 0 8px;
+}
+
+/* ========== 狀態列 ========== */
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.stat-row .label { color: var(--text-dim); }
+.stat-row .value { color: var(--gold); font-weight: bold; }
+
+/* HP / EXP 條 */
+.bar {
+  height: 8px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 4px 0 8px;
+}
+
+.bar-fill {
+  height: 100%;
+  transition: width 0.3s;
+}
+
+.bar-hp { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+.bar-exp { background: linear-gradient(90deg, #3498db, #2980b9); }
+
+/* ========== 區域切換 ========== */
+.area-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.area-btn {
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  padding: 6px 4px;
+  font-size: 9px;
+}
+
+.area-btn.active { background: var(--accent); border-color: var(--gold); }
+.area-btn.locked { opacity: 0.5; }
+
+/* ========== 技能樹 ========== */
+.skill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.skill-card {
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  padding: 8px;
+  font-size: 11px;
+  transition: all 0.1s;
+}
+
+.skill-card.learnable { border-color: var(--green); cursor: pointer; }
+.skill-card.learnable:hover { background: var(--green); color: white; }
+.skill-card.learned { border-color: var(--gold); }
+
+.skill-name {
+  font-weight: bold;
+  color: var(--gold);
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.skill-desc {
+  color: var(--text-dim);
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+
+.skill-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  font-family: 'Press Start 2P', monospace;
+}
+
+/* ========== 背包 ========== */
+.inv-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background: var(--bg-light);
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.inv-count { color: var(--gold); font-weight: bold; }
+.empty { text-align: center; color: var(--text-dim); font-size: 12px; padding: 20px; }
+
+/* ========== 圖鑑 ========== */
+.bestiary-area, .bestiary-boss { margin-bottom: 15px; }
+
+.bestiary-area h3, .bestiary-boss h3 {
+  font-size: 12px;
+  margin-bottom: 6px;
+  color: var(--green);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+}
+
+.bestiary-boss h3 { color: var(--accent); }
+
+.monster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 5px;
+}
+
+.monster-card {
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  padding: 6px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 60px;
+}
+
+.monster-card.boss { border-color: var(--accent); }
+.monster-card.undiscovered { opacity: 0.4; }
+
+.monster-card .monster-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  background: var(--bg-dark);
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.monster-card .monster-img.boss-img {
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--accent);
+}
+
+.monster-card .m-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.monster-card .m-unknown {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background: var(--bg-dark);
+  border-radius: 3px;
+}
+
+.m-name { color: var(--text); }
+.m-kills { color: var(--gold); font-family: 'Press Start 2P', monospace; font-size: 9px; }
+.m-icon { font-size: 14px; margin-right: 4px; }
+
+/* ========== 戰鬥場景 ========== */
+.battle-panel { padding-bottom: 5px; }
+
+.battle-arena {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 20px;
+  min-height: 200px;
+  background: var(--bg-dark);
+  border: 2px solid var(--border);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.player-side, .monster-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 150px;
+}
+
+.battle-img {
+  width: 130px;
+  height: 130px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  transition: transform 0.1s;
+}
+
+.monster-side .battle-img { width: 140px; height: 140px; }
+
+.vs-mark {
+  font-family: 'Press Start 2P', monospace;
+  color: var(--accent);
+  font-size: 20px;
+  text-shadow: 0 0 10px var(--accent);
+}
+
+/* ========== 戰鬥動畫 ========== */
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-5px, 0); }
+  75% { transform: translate(5px, 0); }
+}
+
+@keyframes attack-anim {
+  0% { transform: translateX(0); }
+  40% { transform: translateX(40px) scale(1.1); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes flash {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(2.5) drop-shadow(0 0 10px #ff0); }
+}
+
+@keyframes fade-out {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.5) rotate(20deg); }
+}
+
+@keyframes death-flash {
+  0%, 100% { filter: brightness(1) hue-rotate(0deg); }
+  50% { filter: brightness(0.4) hue-rotate(180deg); }
+}
+
+.shake { animation: shake 0.3s; }
+.attack-anim { animation: attack-anim 0.3s; }
+.flash { animation: flash 0.3s; }
+.fade-out { animation: fade-out 1s forwards; }
+.death-flash { animation: death-flash 1s; }
+
+.damage-number {
+  position: absolute;
+  color: #ff0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 18px;
+  font-weight: bold;
+  text-shadow: 2px 2px 0 #000;
+  pointer-events: none;
+  animation: damage-fly 1s forwards;
+  z-index: 10;
+}
+
+@keyframes damage-fly {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-50px); opacity: 0; }
+}
+
+/* ========== 分頁 ========== */
+.tab-bar {
+  display: flex;
+  gap: 5px;
+  margin-top: 15px;
+  background: var(--bg-dark);
+  border: 2px solid var(--border);
+  border-bottom: none;
+  padding: 5px 5px 0 5px;
+}
+
+.tab-btn {
+  background: var(--bg-light);
+  border: 2px solid var(--border);
+  border-bottom: none;
+  flex: 1;
+  font-size: 10px;
+  padding: 8px;
+}
+
+.tab-btn.active {
+  background: var(--bg-mid);
+  color: var(--gold);
+  transform: translateY(2px);
+}
+
+.tab-panel { padding: 15px; }
+
+/* ========== 打造 Modal ========== */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-content {
+  background: var(--bg-mid);
+  border: var(--pixel-border);
+  padding: 30px;
+  max-width: 700px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-content h2 {
+  font-family: 'Press Start 2P', monospace;
+  color: var(--gold);
+  margin-bottom: 20px;
+}
+
+.recipe-card {
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.recipe-card.can-craft { border-color: var(--green); }
+.recipe-card.owned { border-color: var(--gold); background: var(--bg-mid); }
+
+.recipe-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+
+.recipe-stats {
+  color: var(--green);
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.recipe-cost {
+  color: var(--text-dim);
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.recipe-card .craft-btn {
+  font-size: 10px;
+  padding: 5px 10px;
+}
+
+.recipe-card .craft-btn:not(:disabled) {
+  background: var(--green);
+  color: white;
+}
+
+/* ========== 戰鬥日誌 ========== */
+.log-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.log-entry {
+  padding: 4px 8px;
+  margin-bottom: 2px;
+  font-size: 12px;
+  background: var(--bg-light);
+  border-left: 3px solid var(--border);
+}
+
+.log-win { border-color: var(--gold); color: var(--gold); }
+.log-death { border-color: var(--accent); color: var(--accent); }
+.log-levelup { border-color: var(--green); color: var(--green); }
+.log-area { border-color: var(--blue); color: var(--blue); }
+.log-craft { border-color: var(--purple); color: var(--purple); }
+.log-error { border-color: var(--accent); color: var(--accent); }
+
+/* ========== 過場動畫 ========== */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.overlay-content {
+  text-align: center;
+  animation: boss-zoom 0.5s;
+}
+
+@keyframes boss-zoom {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+.warning-text {
+  font-family: 'Press Start 2P', monospace;
+  color: var(--accent);
+  font-size: 32px;
+  text-shadow: 0 0 20px var(--accent);
+  margin-bottom: 20px;
+  animation: warning-pulse 0.5s infinite alternate;
+}
+
+@keyframes warning-pulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.1); }
+}
+
+.boss-encounter-img {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 20px var(--accent));
+}
+
+.boss-encounter-name {
+  font-family: 'Press Start 2P', monospace;
+  color: var(--gold);
+  font-size: 18px;
+  margin-top: 20px;
+}
+
+.boss-flash {
+  animation: red-flash 0.5s 3;
+}
+
+@keyframes red-flash {
+  0%, 100% { background: rgba(0,0,0,0.9); }
+  50% { background: rgba(233, 69, 96, 0.5); }
+}
+
+.victory-content { color: var(--gold); }
+.victory-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 36px;
+  text-shadow: 0 0 30px var(--gold);
+  animation: victory-glow 1s infinite alternate;
+}
+
+@keyframes victory-glow {
+  0% { text-shadow: 0 0 30px var(--gold); }
+  100% { text-shadow: 0 0 60px var(--gold), 0 0 100px var(--gold); }
+}
