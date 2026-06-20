@@ -71,7 +71,7 @@ const GameCore = {
       weapon: weaponId,
       level: 1,
       exp: 0,
-      expToNext: 100,
+      expToNext: 200,
       hp: 100,
       maxHp: 100,
       atk: weapon.baseAtk,
@@ -169,8 +169,8 @@ const GameCore = {
     // 升級檢查
     this.checkLevelUp();
 
-    // 技能點
-    this.state.skillPoints += monster.isBoss ? 5 : 1;
+    // 技能點（僅升級時獲得，擊殺不再給點）
+    // 規則：每 2 級 +1 技能點（在 checkLevelUp 內處理）
 
     // 死亡時重置 HP
     if (h.hp <= 0) h.hp = 1;
@@ -208,14 +208,21 @@ const GameCore = {
     while (this.state.hunter.exp >= this.state.hunter.expToNext) {
       this.state.hunter.exp -= this.state.hunter.expToNext;
       this.state.hunter.level++;
-      this.state.hunter.expToNext = Math.floor(this.state.hunter.expToNext * 1.3);
+      this.state.hunter.expToNext = Math.floor(this.state.hunter.expToNext * 1.5);
       this.state.hunter.maxHp += 15;
       this.state.hunter.hp = this.state.hunter.maxHp;
       this.state.hunter.atk += 3;
       this.state.hunter.def += 1;
-      this.state.skillPoints += 3;
-      if (typeof UI !== 'undefined' && UI.addBattleLog) {
-        UI.addBattleLog(`🎉 升級！Lv.${this.state.hunter.level}`, 'levelup');
+      // 技能點：每 2 級 +1（偶數級才給）
+      if (this.state.hunter.level % 2 === 0) {
+        this.state.skillPoints += 1;
+        if (typeof UI !== 'undefined' && UI.addBattleLog) {
+          UI.addBattleLog(`🎉 升級！Lv.${this.state.hunter.level}（+1 技能點）`, 'levelup');
+        }
+      } else {
+        if (typeof UI !== 'undefined' && UI.addBattleLog) {
+          UI.addBattleLog(`🎉 升級！Lv.${this.state.hunter.level}`, 'levelup');
+        }
       }
     }
   },

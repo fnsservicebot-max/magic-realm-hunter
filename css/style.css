@@ -450,6 +450,16 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .shake { animation: shake 0.3s; }
 .attack-anim { animation: attack-anim 0.3s; }
+
+/* 魔物 attack-anim 方向反過來：往左衝（攻擊玩家） */
+.monster-side .attack-anim { animation: monster-attack 0.3s; }
+
+@keyframes monster-attack {
+  0% { transform: translateX(0); }
+  40% { transform: translateX(-40px) scale(1.1); }
+  100% { transform: translateX(0); }
+}
+
 .flash { animation: flash 0.3s; }
 .fade-out { animation: fade-out 1s forwards; }
 .death-flash { animation: death-flash 1s; }
