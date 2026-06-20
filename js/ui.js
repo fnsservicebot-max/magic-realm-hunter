@@ -21,6 +21,10 @@ const UI = {
       if (e.target.id === 'forgeBtn') this.openForge();
       if (e.target.id === 'forgeClose') this.closeForge();
       if (e.target.classList.contains('craft-btn')) this.craftItem(e.target.dataset.recipe);
+      if (e.target.classList.contains('potion-btn') || (e.target.closest && e.target.closest('.potion-btn'))) {
+        const btn = e.target.closest('.potion-btn');
+        if (btn && btn.dataset.potion) this.buyPotion(btn.dataset.potion);
+      }
       if (e.target.id === 'tabBestiary') this.showTab('bestiary');
       if (e.target.id === 'tabEquipment') this.showTab('equipment');
       if (e.target.id === 'tabLog') this.showTab('log');
@@ -194,6 +198,8 @@ const UI = {
     if (document.getElementById('hunterDodge')) {
       document.getElementById('hunterDodge').textContent = `${showDodge}%`;
     }
+    // 藥水按鈕狀態（V_0621 新增）
+    this.updatePotionButtons(h);
 
     const area = Monsters[state.currentArea];
     if (area) {
@@ -280,7 +286,13 @@ const UI = {
       const section = document.createElement('div');
       section.className = 'bestiary-area';
       if (locked) {
-        section.innerHTML = `<h3>🔒 ${I18n.t('area_' + areaId)} <span style="color:#888;font-size:10px;">(擊殺 ${areaId === 'desert' ? 5 : areaId === 'snow' ? 10 : areaId === 'volcano' ? 15 : areaId === 'swamp' ? 20 : 25} 隻解鎖)</span></h3>`;
+        // 方案 B ×20：在前一區擊殺對應數量解鎖
+        const reqMap = { desert: 100, snow: 200, volcano: 300, swamp: 400, cave: 500 };
+        const prevMap = { desert: 'forest', snow: 'desert', volcano: 'snow', swamp: 'volcano', cave: 'swamp' };
+        const need = reqMap[areaId];
+        const prev = prevMap[areaId];
+        const prevKills = GameCore.getAreaKills(prev);
+        section.innerHTML = `<h3>🔒 ${I18n.t('area_' + areaId)} <span style="color:#888;font-size:10px;">(${I18n.t('area_' + prev)} 擊殺 ${prevKills}/${need} 解鎖)</span></h3>`;
       } else {
         section.innerHTML = `<h3>${area.icon} ${I18n.t('area_' + areaId)}</h3>`;
         area.monsters.forEach(m => {
@@ -564,6 +576,38 @@ const UI = {
       this.renderAreaButtons();
       this.renderLog();
     }
+  },
+
+  // 購買藥劑（從 GameCore.buyPotion 拿結果並顯示 log）
+  buyPotion(potionId) {
+    const result = GameCore.buyPotion(potionId);
+    if (!result.ok) {
+      const messages = {
+        full_hp: '❤️ HP 已滿，無需使用藥水',
+        not_enough_gold: '💰 金幣不足！',
+        unknown_potion: '❓ 未知藥水',
+        no_hunter: '❌ 請先建立獵人'
+      };
+      this.addBattleLog(messages[result.reason] || '❌ 購買失敗', 'warn');
+      return;
+    }
+    this.addBattleLog(
+      `🧪 使用 ${result.potion.name_zh}！回復 ${result.healed} HP（花費 ${result.spent} 金幣）`,
+      'heal'
+    );
+    this.updateStats(GameCore.state);
+  },
+
+  // 更新藥水按鈕狀態（HP 滿/金幣不足 → disabled）
+  updatePotionButtons(hunter) {
+    if (!hunter || !GameCore.potions) return;
+    document.querySelectorAll('.potion-btn').forEach(btn => {
+      const id = btn.dataset.potion;
+      const potion = GameCore.potions[id];
+      if (!potion) return;
+      const canBuy = hunter.hp < hunter.maxHp && hunter.gold >= potion.cost;
+      btn.disabled = !canBuy;
+    });
   }
 };
 

@@ -363,28 +363,62 @@ const GameCore = {
     }
   },
 
+  // 計算某區域內的擊殺總數
+  getAreaKills(areaId) {
+    const area = Monsters[areaId];
+    if (!area) return 0;
+    return Object.entries(this.state.defeated)
+      .filter(([id]) => area.monsters.find(m => m.id === id))
+      .reduce((sum, [_, c]) => sum + c, 0);
+  },
+
+  // 區域解鎖（方案 B：在前一區擊殺 X 隻解鎖下一區，數量 ×20）
   checkAreaUnlock() {
     const order = ['forest', 'desert', 'snow', 'volcano', 'swamp', 'cave'];
-    const killed = this.state.defeated;
     const requirements = {
-      desert: 5,    // 5 隻森林魔物
-      snow: 10,     // 10 隻森林
-      volcano: 15,
-      swamp: 20,
-      cave: 25
+      desert: 100,    // 100 隻森林擊殺
+      snow: 200,      // 200 隻荒漠擊殺
+      volcano: 300,
+      swamp: 400,
+      cave: 500
     };
 
     order.forEach((areaId, idx) => {
       if (idx === 0) return;
       const need = requirements[areaId];
-      const forestKills = Object.entries(killed)
-        .filter(([id]) => Monsters.forest.monsters.find(m => m.id === id))
-        .reduce((sum, [_, c]) => sum + c, 0);
-      // 簡化：總擊殺數
-      if (this.state.totalKills >= need * (idx)) {
+      const prevArea = order[idx - 1];
+      const prevKills = this.getAreaKills(prevArea);
+      if (prevKills >= need) {
         this.state.unlockedAreas.add(areaId);
       }
     });
+  },
+
+  // ========== 補血藥劑系統 ==========
+  potions: {
+    small:  { id: 'small',  name_zh: '小型藥水', name_en: 'Small Potion',  heal: 30,  cost: 10,  icon: '🧪' },
+    medium: { id: 'medium', name_zh: '中型藥水', name_en: 'Medium Potion', heal: 80,  cost: 30,  icon: '🧪' },
+    large:  { id: 'large',  name_zh: '大型藥水', name_en: 'Large Potion',  heal: 200, cost: 100, icon: '🧪' }
+  },
+
+  // 購買並使用藥劑（扣金幣、加 HP、上限保護）
+  buyPotion(potionId) {
+    const potion = this.potions[potionId];
+    if (!potion) return { ok: false, reason: 'unknown_potion' };
+    const h = this.state.hunter;
+    if (!h) return { ok: false, reason: 'no_hunter' };
+    if (h.hp >= h.maxHp) {
+      return { ok: false, reason: 'full_hp' };
+    }
+    if (h.gold < potion.cost) {
+      return { ok: false, reason: 'not_enough_gold' };
+    }
+    h.gold -= potion.cost;
+    const before = h.hp;
+    h.hp = Math.min(h.maxHp, h.hp + potion.heal);
+    const healed = h.hp - before;
+    this.save();
+    return { ok: true, healed, spent: potion.cost, potion };
   },
 
   switchArea(areaId) {

@@ -217,6 +217,45 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .bar-hp { background: linear-gradient(90deg, #e74c3c, #c0392b); }
 .bar-exp { background: linear-gradient(90deg, #3498db, #2980b9); }
 
+/* ========== 補血藥劑 ========== */
+.potion-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 5px;
+  margin-top: 8px;
+}
+.potion-btn {
+  background: linear-gradient(180deg, #2d3142, #1a1d29);
+  border: 2px solid #5d3fd3;
+  color: #fff;
+  padding: 6px 4px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1.4;
+  transition: all 0.2s;
+}
+.potion-btn:hover:not(:disabled) {
+  border-color: #ffd700;
+  background: linear-gradient(180deg, #3d4362, #2a2d39);
+  transform: translateY(-1px);
+}
+.potion-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.pot-heal {
+  display: block;
+  color: #2ecc71;
+  font-weight: bold;
+  font-size: 12px;
+}
+.pot-cost {
+  display: block;
+  color: #ffd700;
+  font-size: 10px;
+}
+
 /* ========== 區域切換 ========== */
 .area-buttons {
   display: grid;
