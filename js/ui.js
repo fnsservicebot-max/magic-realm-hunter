@@ -129,6 +129,14 @@ const UI = {
     }
   },
 
+  updateMonsterImg(monster) {
+    const img = document.getElementById('monsterImg');
+    if (img && monster && monster.id) {
+      img.src = `assets/monsters/${monster.id}.png`;
+      img.alt = I18n.t(`mon_${monster.id}`, monster.name_zh || monster.id);
+    }
+  },
+
   updateStats(state) {
     if (!state.hunter) return;
     const h = state.hunter;
@@ -431,6 +439,10 @@ const UI = {
     const overlay = document.getElementById('victoryOverlay');
     if (!overlay) return;
     document.getElementById('victoryName').textContent = I18n.t(`mon_${monster.id}`, monster.name_zh);
+    const victoryImg = document.getElementById('victoryImg');
+    if (victoryImg && monster.id) {
+      victoryImg.src = `assets/monsters/${monster.id}.png`;
+    }
     overlay.style.display = 'flex';
     setTimeout(() => {
       overlay.style.display = 'none';

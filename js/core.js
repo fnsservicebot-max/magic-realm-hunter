@@ -118,6 +118,10 @@ const GameCore = {
   },
 
   hunt(monster) {
+    // 戰鬥開始：更新魔物頭像
+    if (typeof UI !== 'undefined' && UI.updateMonsterImg) {
+      UI.updateMonsterImg(monster);
+    }
     const result = Combat.simulate(this.state.hunter, monster);
     if (result.victory) {
       this.onVictory(monster, result);

@@ -104,11 +104,11 @@ const Monsters = {
     if (Math.random() < 0.05) {
       const areaBosses = this.bosses.filter(b => b.area === areaId);
       if (areaBosses.length > 0) {
-        return areaBosses[Math.floor(Math.random() * areaBosses.length)];
+        return { ...areaBosses[Math.floor(Math.random() * areaBosses.length)], isBoss: true };
       }
     }
     // 一般魔物
-    return area.monsters[Math.floor(Math.random() * area.monsters.length)];
+    return { ...area.monsters[Math.floor(Math.random() * area.monsters.length)], isBoss: false };
   },
 
   all() {
