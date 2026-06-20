@@ -66,11 +66,31 @@ const Equipment = {
     return recipe.cost.every(c => (GameCore.state.materials[c.mat] || 0) >= c.qty);
   },
 
+  // 取得同家族現有裝備（武器 = hunter.weapon 家族；防具 = armor 家族）
+  getCurrentRecipe(target) {
+    if (!target) return null;
+    if (target.atk !== undefined) {
+      const weaponId = GameCore.state.hunter.weapon;
+      const family = this.recipes.weapons[weaponId] || [];
+      return family.find(r => r.id === GameCore.state.equipment.weapon) || null;
+    }
+    if (target.def !== undefined) {
+      return this.recipes.armors.find(r => r.id === GameCore.state.equipment.armor) || null;
+    }
+    return null;
+  },
+
   // 打造裝備
   craft(recipeId) {
     const recipe = this.findRecipe(recipeId);
     if (!recipe) return { ok: false, reason: 'recipe_not_found' };
     if (!this.canCraft(recipe)) return { ok: false, reason: 'materials_not_enough' };
+
+    // 阻擋低階覆蓋高階（防呆）
+    const current = this.getCurrentRecipe(recipe);
+    if (current && current.tier >= recipe.tier) {
+      return { ok: false, reason: 'higher_tier_owned', currentTier: current.tier, recipe };
+    }
 
     // 扣素材
     recipe.cost.forEach(c => {
@@ -80,12 +100,19 @@ const Equipment = {
       }
     });
 
-    // 套用裝備效果
+    // 套用裝備效果（脫下舊裝備的數值，再穿上新裝備）
     if (recipe.atk !== undefined) {
+      if (current) GameCore.state.hunter.atk -= current.atk;
       GameCore.state.equipment.weapon = recipe.id;
       GameCore.state.hunter.atk += recipe.atk;
     }
     if (recipe.def !== undefined) {
+      if (current) {
+        GameCore.state.hunter.def -= current.def;
+        const oldHp = current.hp || 0;
+        GameCore.state.hunter.maxHp -= oldHp;
+        GameCore.state.hunter.hp = Math.max(1, GameCore.state.hunter.hp - oldHp);
+      }
       GameCore.state.equipment.armor = recipe.id;
       GameCore.state.hunter.def += recipe.def;
       GameCore.state.hunter.maxHp += recipe.hp || 0;

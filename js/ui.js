@@ -294,21 +294,42 @@ const UI = {
     const weaponId = GameCore.state.hunter.weapon;
     const weaponRecipes = Equipment.getWeaponTiers(weaponId);
 
+    // 取得同家族現有裝備的 tier
+    const currentWeapon = weaponRecipes.find(r => r.id === GameCore.state.equipment.weapon);
+    const currentWeaponTier = currentWeapon ? currentWeapon.tier : 0;
+    const currentArmor = Equipment.getArmors().find(r => r.id === GameCore.state.equipment.armor);
+    const currentArmorTier = currentArmor ? currentArmor.tier : 0;
+
     // 武器分頁
     const weaponSection = document.createElement('div');
     weaponSection.innerHTML = `<h4>⚔️ ${I18n.t('weapon_' + weaponId)} ${I18n.t('forge_weapons')}</h4>`;
     weaponRecipes.forEach(recipe => {
       const canCraft = Equipment.canCraft(recipe);
       const owned = GameCore.state.equipment.weapon === recipe.id;
+      const lowerTier = currentWeaponTier > 0 && recipe.tier < currentWeaponTier;
+      let statusText, disabled = false;
+      if (owned) {
+        statusText = I18n.t('equipped');
+        disabled = true;
+      } else if (lowerTier) {
+        statusText = `⬆ 已擁有更高階（${I18n.t('forge_tier_' + currentWeapon.tier, currentWeapon.name_zh)}）`;
+        disabled = true;
+      } else if (!canCraft) {
+        statusText = I18n.t('forge_not_enough');
+        disabled = true;
+      } else {
+        statusText = I18n.t('forge_craft');
+        disabled = false;
+      }
       const div = document.createElement('div');
-      div.className = `recipe-card ${owned ? 'owned' : ''} ${canCraft ? 'can-craft' : ''}`;
+      div.className = `recipe-card ${owned ? 'owned' : ''} ${lowerTier ? 'lower-tier' : ''} ${canCraft && !owned && !lowerTier ? 'can-craft' : ''}`;
       const costStr = recipe.cost.map(c => `${I18n.t('mat_' + c.mat, c.mat)}×${c.qty}`).join(', ');
       div.innerHTML = `
-        <div class="recipe-name">${I18n.t(recipe.name_zh, recipe.name_zh)} ${owned ? '✅' : ''}</div>
+        <div class="recipe-name">${I18n.t(recipe.name_zh, recipe.name_zh)} ${owned ? '✅' : ''} ${lowerTier ? '🔒' : ''}</div>
         <div class="recipe-stats">ATK +${recipe.atk}</div>
         <div class="recipe-cost">${costStr}</div>
-        <button class="craft-btn" data-recipe="${recipe.id}" ${canCraft && !owned ? '' : 'disabled'}>
-          ${owned ? I18n.t('equipped') : canCraft ? I18n.t('forge_craft') : I18n.t('forge_not_enough')}
+        <button class="craft-btn" data-recipe="${recipe.id}" ${disabled ? 'disabled' : ''}>
+          ${statusText}
         </button>
       `;
       weaponSection.appendChild(div);
@@ -321,15 +342,30 @@ const UI = {
     Equipment.getArmors().forEach(recipe => {
       const canCraft = Equipment.canCraft(recipe);
       const owned = GameCore.state.equipment.armor === recipe.id;
+      const lowerTier = currentArmorTier > 0 && recipe.tier < currentArmorTier;
+      let statusText, disabled = false;
+      if (owned) {
+        statusText = I18n.t('equipped');
+        disabled = true;
+      } else if (lowerTier) {
+        statusText = `⬆ 已擁有更高階（${currentArmor.name_zh}）`;
+        disabled = true;
+      } else if (!canCraft) {
+        statusText = I18n.t('forge_not_enough');
+        disabled = true;
+      } else {
+        statusText = I18n.t('forge_craft');
+        disabled = false;
+      }
       const div = document.createElement('div');
-      div.className = `recipe-card ${owned ? 'owned' : ''} ${canCraft ? 'can-craft' : ''}`;
+      div.className = `recipe-card ${owned ? 'owned' : ''} ${lowerTier ? 'lower-tier' : ''} ${canCraft && !owned && !lowerTier ? 'can-craft' : ''}`;
       const costStr = recipe.cost.map(c => `${I18n.t('mat_' + c.mat, c.mat)}×${c.qty}`).join(', ');
       div.innerHTML = `
-        <div class="recipe-name">${recipe.name_zh} ${owned ? '✅' : ''}</div>
+        <div class="recipe-name">${recipe.name_zh} ${owned ? '✅' : ''} ${lowerTier ? '🔒' : ''}</div>
         <div class="recipe-stats">DEF +${recipe.def} / HP +${recipe.hp}</div>
         <div class="recipe-cost">${costStr}</div>
-        <button class="craft-btn" data-recipe="${recipe.id}" ${canCraft && !owned ? '' : 'disabled'}>
-          ${owned ? I18n.t('equipped') : canCraft ? I18n.t('forge_craft') : I18n.t('forge_not_enough')}
+        <button class="craft-btn" data-recipe="${recipe.id}" ${disabled ? 'disabled' : ''}>
+          ${statusText}
         </button>
       `;
       armorSection.appendChild(div);
@@ -353,8 +389,12 @@ const UI = {
       this.renderEquipment();
       this.updateStats(GameCore.state);
       this.updateInventory(GameCore.state);
-    } else {
+    } else if (result.reason === 'higher_tier_owned') {
+      this.addBattleLog(`⬆ 已裝備更高階的${result.recipe.atk !== undefined ? '武器' : '防具'}，無法打造低階`, 'warn');
+    } else if (result.reason === 'materials_not_enough') {
       this.addBattleLog(`❌ 打造失敗：素材不足`, 'error');
+    } else {
+      this.addBattleLog(`❌ 打造失敗：${result.reason}`, 'error');
     }
   },
 

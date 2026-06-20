@@ -535,6 +535,28 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .recipe-card.can-craft { border-color: var(--green); }
 .recipe-card.owned { border-color: var(--gold); background: var(--bg-mid); }
+.recipe-card.lower-tier {
+  opacity: 0.5;
+  border-color: #555;
+  background: var(--bg-dark);
+  position: relative;
+}
+.recipe-card.lower-tier::before {
+  content: "⬆";
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 14px;
+  color: var(--accent);
+  text-shadow: 0 0 5px var(--accent);
+}
+.recipe-card.lower-tier .recipe-name { color: #888; text-decoration: line-through; }
+.recipe-card.lower-tier .craft-btn {
+  background: #2a2a2a !important;
+  color: #666 !important;
+  cursor: not-allowed !important;
+  border-color: #444 !important;
+}
 
 .recipe-name {
   font-family: 'Press Start 2P', monospace;
