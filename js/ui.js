@@ -57,6 +57,14 @@ const UI = {
         GameCore.save();
       });
     }
+    // 遇 Boss 逃跑（V_0625）
+    const fleeChk = document.getElementById('fleeBossEnabled');
+    if (fleeChk) {
+      fleeChk.addEventListener('change', () => {
+        GameCore.state.fleeBoss = fleeChk.checked;
+        GameCore.save();
+      });
+    }
   },
 
   // 從 GameCore.state.autoPotion 同步 UI 狀態
@@ -69,6 +77,9 @@ const UI = {
       sel.value = String(cfg.threshold);
       sel.disabled = !cfg.enabled;
     }
+    // V_0625 遇 Boss 逃跑
+    const fleeChk = document.getElementById('fleeBossEnabled');
+    if (fleeChk) fleeChk.checked = !!GameCore.state.fleeBoss;
   },
 
   bindCombatCallbacks() {

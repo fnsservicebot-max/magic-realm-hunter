@@ -2,7 +2,7 @@
 // V_0612 — 即時戰鬥（每秒一回合）
 
 const GameCore = {
-  VERSION: 'V_0624',  // 顯示在頁面標題與 H1
+  VERSION: 'V_0625',  // 顯示在頁面標題與 H1
   state: {
     hunter: null,
     materials: {},
@@ -21,7 +21,9 @@ const GameCore = {
     isDead: false,
     deathCount: 0,
     battle: { active: false, monster: null, timer: null },
-    autoPotion: { enabled: false, threshold: 30 }  // V_0624 自動補血設定
+    autoPotion: { enabled: false, threshold: 30 },  // V_0624 自動補血設定
+    fleeBoss: false,                              // V_0625 遇 Boss 自動逃跑
+    fleeCooldownUntil: 0                          // V_0625 逃跑冷卻時間戳
   },
 
   init() {
@@ -120,13 +122,44 @@ const GameCore = {
     if (!this.state.hunter || this.state.isDead) return;
     // 戰鬥中不重新 encounter
     if (this.state.battle && this.state.battle.active) return;
+    // 逃跑冷卻中（V_0625）跳過 encounter
+    if (this.state.fleeCooldownUntil && Date.now() < this.state.fleeCooldownUntil) return;
     const monster = Monsters.encounter(this.state.currentArea, this.state.hunter.level);
     if (!monster) return;
     this.startBattle(monster);
   },
 
+  // 遇 Boss 逃跑（V_0625）— 不扣 EXP/Gold、不算死亡
+  flee(monster) {
+    // 清除戰鬥狀態
+    this.state.battle = { active: false, monster: null, timer: null };
+    // 逃跑後 5 秒內不 encounter（新 Boss 不會馬上又遇到）
+    this.state.fleeCooldownUntil = Date.now() + 5000;
+    // HP 恢復（逃跑懲罰較輕，只回滿）
+    if (this.state.hunter) {
+      this.state.hunter.hp = this.state.hunter.maxHp;
+    }
+    if (typeof UI !== 'undefined') {
+      if (UI.updateMonsterHp) UI.updateMonsterHp({ hp: 0, maxHp: monster.maxHp || monster.hp });
+      if (UI.addBattleLog) {
+        const title = monster.isBoss
+          ? `👑 ${I18n.t('mon_' + monster.id, monster.name_zh)}（${I18n.t('boss')}）`
+          : I18n.t('mon_' + monster.id, monster.name_zh);
+        UI.addBattleLog(`💨 遇 ${title} 自動逃跑！（5 秒冷卻）`, 'flee');
+      }
+      if (UI.updateStats) UI.updateStats(this.state);
+    }
+    this.save();
+  },
+
   // 啟動即時戰鬥（每秒一回合）
   startBattle(monster) {
+    // V_0625 遇 Boss 自動逃跑
+    if (monster.isBoss && this.state.fleeBoss) {
+      this.flee(monster);
+      return;
+    }
+
     // 若已有戰鬥，先結束（避免殘留）
     if (this.state.battle && this.state.battle.active) {
       clearInterval(this.state.battle.timer);
