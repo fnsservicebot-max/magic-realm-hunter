@@ -78,8 +78,9 @@ const GameCore = {
       atk: weapon.baseAtk,
       def: 5,
       gold: 0,
-      critRate: 0.05,
-      critDmg: 1.5
+      critRate: 0.05,   // 基礎暴擊率 5%
+      critDmg: 1.5,     // 暴擊傷害 150%
+      dodgeRate: 0.05   // 基礎閃避率 5%
     };
     this.state.playerImg = `assets/weapons/${weaponId}.png`;
     this.save();

@@ -38,16 +38,18 @@ const UI = {
       }
     };
 
-    Combat.onMonsterHit = (monster, dmg) => {
+    Combat.onMonsterHit = (monster, dmg, isCrit) => {
       const monsterImg = document.getElementById('monsterImg');
       if (monsterImg) {
         monsterImg.classList.add('shake');
         monsterImg.classList.add('flash');
+        if (isCrit) monsterImg.classList.add('crit-flash');
         // 顯示傷害數字
-        this.showDamageNumber(dmg, monster.isBoss ? 'boss' : 'monster');
+        this.showDamageNumber(dmg, monster.isBoss ? 'boss' : 'monster', isCrit);
         setTimeout(() => {
           monsterImg.classList.remove('shake');
           monsterImg.classList.remove('flash');
+          monsterImg.classList.remove('crit-flash');
         }, 300);
       }
     };
@@ -60,12 +62,34 @@ const UI = {
       }
     };
 
-    Combat.onPlayerHit = (monster, dmg) => {
+    Combat.onPlayerHit = (monster, dmg, isCrit) => {
       const weaponImg = document.getElementById('weaponImg');
       if (weaponImg) {
         weaponImg.classList.add('shake');
-        setTimeout(() => weaponImg.classList.remove('shake'), 300);
-        this.showDamageNumber(dmg, 'player');
+        if (isCrit) weaponImg.classList.add('crit-flash');
+        setTimeout(() => {
+          weaponImg.classList.remove('shake');
+          weaponImg.classList.remove('crit-flash');
+        }, 300);
+        this.showDamageNumber(dmg, 'player', isCrit);
+      }
+    };
+
+    Combat.onCrit = (attacker, defender, dmg) => {
+      // 暴擊特效：金色閃光（由 onMonsterHit/onPlayerHit 內 crit-flash 處理）
+    };
+
+    Combat.onDodge = (defender, attacker) => {
+      // defender 閃避 attacker 的攻擊
+      const target = defender.isBoss !== undefined
+        ? document.getElementById('monsterImg').parentElement
+        : document.getElementById('weaponImg').parentElement;
+      if (target) {
+        const txt = document.createElement('div');
+        txt.className = 'dodge-text';
+        txt.textContent = '💨 MISS';
+        target.appendChild(txt);
+        setTimeout(() => txt.remove(), 800);
       }
     };
 
@@ -490,15 +514,15 @@ const UI = {
   },
 
   // ========== 傷害數字 ==========
-  showDamageNumber(dmg, target) {
+  showDamageNumber(dmg, target, isCrit = false) {
     let container;
     if (target === 'player') container = document.getElementById('weaponImg').parentElement;
     else if (target === 'boss') container = document.getElementById('monsterImg').parentElement;
     else container = document.getElementById('monsterImg').parentElement;
 
     const num = document.createElement('div');
-    num.className = 'damage-number';
-    num.textContent = `-${dmg}`;
+    num.className = 'damage-number' + (isCrit ? ' crit' : '');
+    num.textContent = isCrit ? `💥-${dmg}` : `-${dmg}`;
     num.style.left = `${Math.random() * 60 + 20}%`;
     num.style.top = `${Math.random() * 30 + 10}%`;
     container.appendChild(num);

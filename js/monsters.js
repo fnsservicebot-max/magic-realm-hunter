@@ -104,11 +104,19 @@ const Monsters = {
     if (Math.random() < 0.05) {
       const areaBosses = this.bosses.filter(b => b.area === areaId);
       if (areaBosses.length > 0) {
-        return { ...areaBosses[Math.floor(Math.random() * areaBosses.length)], isBoss: true };
+        const b = areaBosses[Math.floor(Math.random() * areaBosses.length)];
+        return { ...b, isBoss: true, critRate: 0.10, critDmg: 1.8, dodgeRate: 0.05 };
       }
     }
-    // 一般魔物
-    return { ...area.monsters[Math.floor(Math.random() * area.monsters.length)], isBoss: false };
+    // 一般魔物（依等級調整暴擊率，高等魔物更會暴擊）
+    const lv = GameCore.state.hunter ? GameCore.state.hunter.level : 1;
+    const base = { ...area.monsters[Math.floor(Math.random() * area.monsters.length)], isBoss: false };
+    return {
+      ...base,
+      critRate: 0.05 + Math.min(0.10, lv * 0.005),  // 5% 起，每級 +0.5%，最高 15%
+      critDmg: 1.5,
+      dodgeRate: 0.03 + Math.min(0.07, lv * 0.003)   // 3% 起，每級 +0.3%，最高 10%
+    };
   },
 
   all() {
