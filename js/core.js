@@ -1,5 +1,5 @@
 // core.js — 遊戲核心：狀態管理、放置 loop、存檔、HP 回復
-// V_0602
+// V_0612 — 即時戰鬥（每秒一回合）
 
 const GameCore = {
   state: {
@@ -18,7 +18,8 @@ const GameCore = {
     lastSaved: Date.now(),
     playerImg: 'assets/weapons/sword.png',
     isDead: false,
-    deathCount: 0
+    deathCount: 0,
+    battle: { active: false, monster: null, timer: null }
   },
 
   init() {
@@ -112,21 +113,100 @@ const GameCore = {
 
   tick() {
     if (!this.state.hunter || this.state.isDead) return;
+    // 戰鬥中不重新 encounter
+    if (this.state.battle && this.state.battle.active) return;
     const monster = Monsters.encounter(this.state.currentArea, this.state.hunter.level);
     if (!monster) return;
-    this.hunt(monster);
+    this.startBattle(monster);
   },
 
+  // 啟動即時戰鬥（每秒一回合）
+  startBattle(monster) {
+    // 若已有戰鬥，先結束（避免殘留）
+    if (this.state.battle && this.state.battle.active) {
+      clearInterval(this.state.battle.timer);
+      this.state.battle = { active: false, monster: null, timer: null };
+    }
+
+    this.state.battle = { active: true, monster, timer: null };
+
+    if (typeof UI !== 'undefined' && UI.updateMonsterImg) {
+      UI.updateMonsterImg(monster);
+    }
+    if (typeof UI !== 'undefined' && UI.addBattleLog) {
+      const title = monster.isBoss
+        ? `👑 ${I18n.t('mon_' + monster.id, monster.name_zh)}（${I18n.t('boss')}）`
+        : I18n.t('mon_' + monster.id, monster.name_zh);
+      UI.addBattleLog(`⚔️ 遭遇 ${title}！`, 'encounter');
+    }
+
+    const round = () => {
+      if (!this.state.battle.active) return;
+
+      // 玩家攻擊
+      if (Combat.onAttack) Combat.onAttack(monster);
+      const pDmg = Combat.calcDamage(this.state.hunter, monster);
+      monster.hp = Math.max(0, monster.hp - pDmg);
+      if (Combat.onMonsterHit) Combat.onMonsterHit(monster, pDmg);
+
+      if (monster.hp <= 0) {
+        this.endBattle(true);
+        return;
+      }
+
+      // 魔物反擊
+      if (Combat.onMonsterAttack) Combat.onMonsterAttack(monster);
+      const mDmg = Math.max(1, monster.atk - this.state.hunter.def);
+      this.state.hunter.hp = Math.max(0, this.state.hunter.hp - mDmg);
+      if (Combat.onPlayerHit) Combat.onPlayerHit(monster, mDmg);
+
+      // 即時更新 UI（HP 條等）
+      if (typeof UI !== 'undefined' && UI.updateStats) {
+        UI.updateStats(this.state);
+      }
+
+      if (this.state.hunter.hp <= 0) {
+        this.endBattle(false);
+        return;
+      }
+    };
+
+    // 立即跑第一回合，之後每 1000ms 一回合
+    this.state.battle.timer = setInterval(round, 1000);
+    round();
+  },
+
+  // 結束戰鬥
+  endBattle(victory) {
+    if (this.state.battle && this.state.battle.timer) {
+      clearInterval(this.state.battle.timer);
+    }
+    const monster = this.state.battle.monster;
+    if (!monster) {
+      this.state.battle = { active: false, monster: null, timer: null };
+      return;
+    }
+
+    this.state.battle = { active: false, monster: null, timer: null };
+
+    if (victory) {
+      this.onVictory(monster);
+    } else {
+      this.onDeath(monster);
+    }
+    this.save();
+    if (typeof UI !== 'undefined' && UI.updateStats) {
+      UI.updateStats(this.state);
+    }
+  },
+
+  // 同步戰鬥（給 E2E 測試 / 手動觸發用）
   hunt(monster) {
-    // 戰鬥開始：更新魔物頭像
     if (typeof UI !== 'undefined' && UI.updateMonsterImg) {
       UI.updateMonsterImg(monster);
     }
     const result = Combat.simulate(this.state.hunter, monster);
-
-    // 寫回玩家實際受到的傷害（combat 內計算但沒寫回 state）
     this.state.hunter.hp = Math.max(0, this.state.hunter.hp - result.damageTaken);
-
     if (result.victory) {
       this.onVictory(monster, result);
     } else {
