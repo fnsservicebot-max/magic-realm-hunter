@@ -164,10 +164,19 @@ const UI = {
   updateStats(state) {
     if (!state.hunter) return;
     const h = state.hunter;
+    // 計算有效屬性（含技能 buff）
+    const eff = (typeof Skills !== 'undefined')
+      ? Skills.getEffectiveStats(h)
+      : null;
+    const showAtk = eff ? eff.atk : h.atk;
+    const showCrit = eff ? Math.round(eff.critRate * 100) : Math.round((h.critRate || 0.05) * 100);
+    const showHit = eff ? Math.round(eff.hitRate * 100) : Math.round((h.hitRate || 0.95) * 100);
+    const showDodge = eff ? Math.round(eff.dodgeRate * 100) : Math.round((h.dodgeRate || 0.05) * 100);
+
     document.getElementById('hunterName').textContent = h.name;
     document.getElementById('hunterLevel').textContent = h.level;
     document.getElementById('hunterHp').textContent = `${h.hp}/${h.maxHp}`;
-    document.getElementById('hunterAtk').textContent = h.atk;
+    document.getElementById('hunterAtk').textContent = showAtk;
     document.getElementById('hunterDef').textContent = h.def;
     document.getElementById('hunterGold').textContent = h.gold;
     document.getElementById('hunterExp').textContent = `${h.exp}/${h.expToNext}`;
@@ -175,6 +184,16 @@ const UI = {
     document.getElementById('totalKills').textContent = state.totalKills;
     document.getElementById('bossKills').textContent = state.bossKills;
     document.getElementById('deathCount').textContent = state.deathCount;
+    // 三項戰鬥屬性（V_0620 新增）
+    if (document.getElementById('hunterHit')) {
+      document.getElementById('hunterHit').textContent = `${showHit}%`;
+    }
+    if (document.getElementById('hunterCrit')) {
+      document.getElementById('hunterCrit').textContent = `${showCrit}%`;
+    }
+    if (document.getElementById('hunterDodge')) {
+      document.getElementById('hunterDodge').textContent = `${showDodge}%`;
+    }
 
     const area = Monsters[state.currentArea];
     if (area) {

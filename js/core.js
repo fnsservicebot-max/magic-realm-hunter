@@ -80,7 +80,9 @@ const GameCore = {
       gold: 0,
       critRate: 0.05,   // 基礎暴擊率 5%
       critDmg: 1.5,     // 暴擊傷害 150%
-      dodgeRate: 0.05   // 基礎閃避率 5%
+      dodgeRate: 0.05,  // 基礎閃避率 5%
+      hitRate: 0.95,    // 基礎命中率 95%（V_0620 新增）
+      skills: {}        // 技能學習狀態（V_0620 傳給 combat 用）
     };
     this.state.playerImg = `assets/weapons/${weaponId}.png`;
     this.save();
@@ -131,6 +133,9 @@ const GameCore = {
 
     this.state.battle = { active: true, monster, timer: null };
 
+    // 同步技能狀態到 hunter（給 combat 讀）
+    this.state.hunter.skills = GameCore.state.skills || {};
+
     if (typeof UI !== 'undefined' && UI.updateMonsterImg) {
       UI.updateMonsterImg(monster);
     }
@@ -141,25 +146,71 @@ const GameCore = {
       UI.addBattleLog(`⚔️ 遭遇 ${title}！`, 'encounter');
     }
 
+    // 計算玩家有效屬性（包含技能 buff）
+    const eff = Skills.getEffectiveStats(this.state.hunter);
+    // 怪物屬性（補上預設）
+    const mStats = {
+      mAtk: monster.atk,
+      mCrit: monster.critRate || 0.05,
+      mCritDmg: monster.critDmg || 1.5,
+      mHit: monster.hitRate || 0.90,
+      mDodge: monster.dodgeRate || 0.02
+    };
+    this.state.battle.playerEff = eff;
+    this.state.battle.monsterStats = mStats;
+
     const round = () => {
       if (!this.state.battle.active) return;
+      const eff = this.state.battle.playerEff;
+      const ms = this.state.battle.monsterStats;
 
-      // 玩家攻擊
+      // 玩家攻擊（含命中/閃避/暴擊 + 技能 buff）
       if (Combat.onAttack) Combat.onAttack(monster);
-      const pDmg = Combat.calcDamage(this.state.hunter, monster);
-      monster.hp = Math.max(0, monster.hp - pDmg);
-      if (Combat.onMonsterHit) Combat.onMonsterHit(monster, pDmg);
+      const pResult = Combat.attackWithStats(eff.atk, eff.critRate, eff.critDmg, eff.hitRate, ms.mDodge);
+      if (pResult.missed) {
+        if (typeof UI !== 'undefined' && UI.addBattleLog) {
+          UI.addBattleLog('💨 你的攻擊未命中！', 'miss');
+        }
+      } else if (pResult.dodged) {
+        if (typeof UI !== 'undefined' && UI.addBattleLog) {
+          UI.addBattleLog(`💨 ${monster.name_zh || monster.name_en} 閃避了攻擊！`, 'dodge');
+        }
+        if (Combat.onDodge) Combat.onDodge(monster, this.state.hunter);
+      } else {
+        monster.hp = Math.max(0, monster.hp - pResult.dmg);
+        if (Combat.onMonsterHit) Combat.onMonsterHit(monster, pResult.dmg, pResult.crit);
+        if (typeof UI !== 'undefined' && UI.addBattleLog) {
+          UI.addBattleLog(pResult.crit ? `💥 暴擊！攻擊：${pResult.dmg} 傷害` : `⚔️ 攻擊：${pResult.dmg} 傷害`, pResult.crit ? 'crit' : 'attack');
+        }
+      }
 
       if (monster.hp <= 0) {
         this.endBattle(true);
         return;
       }
 
-      // 魔物反擊
+      // 怪物反擊
       if (Combat.onMonsterAttack) Combat.onMonsterAttack(monster);
-      const mDmg = Math.max(1, monster.atk - this.state.hunter.def);
-      this.state.hunter.hp = Math.max(0, this.state.hunter.hp - mDmg);
-      if (Combat.onPlayerHit) Combat.onPlayerHit(monster, mDmg);
+      const mResult = Combat.attackWithStats(ms.mAtk, ms.mCrit, ms.mCritDmg, ms.mHit, eff.dodgeRate);
+      if (mResult.missed) {
+        if (typeof UI !== 'undefined' && UI.addBattleLog) {
+          UI.addBattleLog(`💨 ${monster.name_zh || monster.name_en} 攻擊未命中！`, 'miss');
+        }
+      } else if (mResult.dodged) {
+        if (typeof UI !== 'undefined' && UI.addBattleLog) {
+          UI.addBattleLog(`💨 你閃避了 ${monster.name_zh || monster.name_en} 的攻擊！`, 'dodge');
+        }
+        if (Combat.onDodge) Combat.onDodge(this.state.hunter, monster);
+      } else {
+        const reduced = Math.floor(mResult.dmg * (1 - eff.damageReduction));
+        this.state.hunter.hp = Math.max(0, this.state.hunter.hp - reduced);
+        if (Combat.onPlayerHit) Combat.onPlayerHit(monster, reduced, mResult.crit);
+        if (typeof UI !== 'undefined' && UI.addBattleLog) {
+          UI.addBattleLog(mResult.crit
+            ? `💥 ${monster.name_zh || monster.name_en} 暴擊！反擊：${reduced} 傷害`
+            : `💥 ${monster.name_zh || monster.name_en} 反擊：${reduced} 傷害`, 'damage');
+        }
+      }
 
       // 即時更新 UI（HP 條等）
       if (typeof UI !== 'undefined' && UI.updateStats) {

@@ -1,13 +1,13 @@
 // skills.js — 技能樹系統
-// V_0601
-// 7 武器技能樹（每 8-10 技能）+ 共用技能樹（4 類：攻擊/防禦/採集/幸運）
+// V_0620 — 完整技能效果實作（speed_mult 改為命中/閃避）
+// 7 武器技能樹（每 4-5 技能）+ 共用技能樹（4 類：攻擊/防禦/採集/幸運）
 
 const Skills = {
   // 武器專屬技能
   weaponTrees: {
     sword: [
       { id: 'sword_1', name_zh: '橫斬', name_en: 'Slash', desc_zh: '攻擊力 +5%', desc_en: 'ATK +5%', cost: 1, max: 5, type: 'atk_mult', value: 0.05 },
-      { id: 'sword_2', name_zh: '三重斬', name_en: 'Triple Slash', desc_zh: '攻擊速度 +10%', desc_en: 'Speed +10%', cost: 2, max: 3, type: 'speed_mult', value: 0.10 },
+      { id: 'sword_2', name_zh: '鋒利之刃', name_en: 'Sharp Blade', desc_zh: '命中 +4%', desc_en: 'Hit Rate +4%', cost: 2, max: 5, type: 'hit_rate', value: 0.04 },
       { id: 'sword_3', name_zh: '劍氣', name_en: 'Sword Aura', desc_zh: '暴擊率 +3%', desc_en: 'Crit Rate +3%', cost: 2, max: 5, type: 'crit_rate', value: 0.03 },
       { id: 'sword_4', name_zh: '迴旋斬', name_en: 'Whirlwind', desc_zh: '全體傷害 +20%', desc_en: 'AoE +20%', cost: 3, max: 1, type: 'aoe', value: 0.20 },
       { id: 'sword_5', name_zh: '聖劍降臨', name_en: 'Holy Blade', desc_zh: '終極技能，攻擊力 +50%', desc_en: 'Ultimate, ATK +50%', cost: 5, max: 1, requires: 'sword_4', type: 'atk_mult', value: 0.50 }
@@ -15,7 +15,7 @@ const Skills = {
     spear: [
       { id: 'spear_1', name_zh: '突刺', name_en: 'Thrust', desc_zh: '攻擊力 +6%', desc_en: 'ATK +6%', cost: 1, max: 5, type: 'atk_mult', value: 0.06 },
       { id: 'spear_2', name_zh: '先制', name_en: 'Initiative', desc_zh: '先制攻擊（敵人無法反擊）', desc_en: 'Preemptive strike', cost: 3, max: 1, type: 'first_strike' },
-      { id: 'spear_3', name_zh: '連刺', name_en: 'Multi Thrust', desc_zh: '暴擊傷害 +30%', desc_en: 'Crit DMG +30%', cost: 2, max: 3, type: 'crit_dmg', value: 0.30 },
+      { id: 'spear_3', name_zh: '破甲', name_en: 'Armor Break', desc_zh: '命中 +6%', desc_en: 'Hit Rate +6%', cost: 2, max: 5, type: 'hit_rate', value: 0.06 },
       { id: 'spear_4', name_zh: '迴旋投擲', name_en: 'Spin Throw', desc_zh: '攻擊力 +25%', desc_en: 'ATK +25%', cost: 4, max: 1, type: 'atk_mult', value: 0.25 }
     ],
     bow: [
@@ -25,7 +25,7 @@ const Skills = {
       { id: 'bow_4', name_zh: '暴風箭雨', name_en: 'Arrow Storm', desc_zh: '終極，全敵傷害 +100%', desc_en: 'Ultimate, all +100%', cost: 5, max: 1, requires: 'bow_3', type: 'aoe', value: 1.00 }
     ],
     dual_blade: [
-      { id: 'dual_1', name_zh: '雙刃', name_en: 'Twin Edge', desc_zh: '攻擊速度 +15%', desc_en: 'Speed +15%', cost: 1, max: 5, type: 'speed_mult', value: 0.15 },
+      { id: 'dual_1', name_zh: '鬼影閃', name_en: 'Ghost Flash', desc_zh: '閃避 +5%', desc_en: 'Dodge +5%', cost: 1, max: 5, type: 'dodge_rate', value: 0.05 },
       { id: 'dual_2', name_zh: '連擊', name_en: 'Combo', desc_zh: '每 3 擊 +50% 傷害', desc_en: 'Every 3 hits +50%', cost: 2, max: 3, type: 'combo' },
       { id: 'dual_3', name_zh: '鬼人化', name_en: 'Demon Mode', desc_zh: '攻擊力 +30% / HP -20%', desc_en: 'ATK +30% / HP -20%', cost: 3, max: 1, type: 'berserk' },
       { id: 'dual_4', name_zh: '亂舞', name_en: 'Chaos Dance', desc_zh: '終極，8 連擊', desc_en: 'Ultimate, 8-hit combo', cost: 5, max: 1, requires: 'dual_3', type: 'combo_8' }
@@ -119,6 +119,45 @@ const Skills = {
       if (s) return s;
     }
     return null;
+  },
+
+  // ============ 技能效果計算 ============
+  // 加總某 stat 的所有技能加成（傳入技能學習狀態、stat 名）
+  // 回傳單一數字（每層 value 加總）
+  getStatBonus(statType) {
+    let total = 0;
+    for (const skillId in GameCore.state.skills) {
+      const level = GameCore.state.skills[skillId];
+      if (level <= 0) continue;
+      const skill = this.findSkill(skillId);
+      if (!skill || skill.type !== statType) continue;
+      total += skill.value * level;
+    }
+    return total;
+  },
+
+  // 計算玩家的有效戰鬥屬性（含技能 buff）
+  getEffectiveStats(hunter) {
+    const atkMult = this.getStatBonus('atk_mult');
+    const atkFlat = this.getStatBonus('atk_flat');
+    const critRate = this.getStatBonus('crit_rate');
+    const critDmg = this.getStatBonus('crit_dmg');
+    const hitRate = this.getStatBonus('hit_rate');
+    const dodgeRate = this.getStatBonus('dodge_rate');
+    const defFlat = this.getStatBonus('def_flat');
+    const hpFlat = this.getStatBonus('hp_flat');
+    const reduction = this.getStatBonus('damage_reduction');
+
+    return {
+      atk: Math.floor(hunter.atk * (1 + atkMult) + atkFlat),
+      critRate: Math.min(0.95, (hunter.critRate || 0.05) + critRate),
+      critDmg: (hunter.critDmg || 1.5) + critDmg,
+      hitRate: Math.min(0.99, (hunter.hitRate || 0.95) + hitRate),
+      dodgeRate: Math.min(0.75, (hunter.dodgeRate || 0.05) + dodgeRate),
+      def: hunter.def + defFlat,
+      maxHp: hunter.maxHp + hpFlat,
+      damageReduction: Math.min(0.5, reduction)
+    };
   }
 };
 
