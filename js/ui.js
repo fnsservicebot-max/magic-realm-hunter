@@ -7,6 +7,14 @@ const UI = {
   init() {
     this.bindEvents();
     this.bindCombatCallbacks();
+    // 顯示版次（從 GameCore.VERSION 動態讀取）
+    if (GameCore.VERSION) {
+      const v = GameCore.VERSION;
+      const titleEl = document.getElementById('appVersionTitle');
+      if (titleEl) titleEl.textContent = v;
+      const headerEl = document.getElementById('appVersionHeader');
+      if (headerEl) headerEl.textContent = v;
+    }
   },
 
   bindEvents() {

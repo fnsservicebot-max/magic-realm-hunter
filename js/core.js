@@ -2,6 +2,7 @@
 // V_0612 — 即時戰鬥（每秒一回合）
 
 const GameCore = {
+  VERSION: 'V_0623',  // 顯示在頁面標題與 H1
   state: {
     hunter: null,
     materials: {},

@@ -476,6 +476,22 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   font-family: 'Press Start 2P', monospace;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
 }
+
+/* ========== 版次標籤 ========== */
+.version-tag {
+  display: inline-block;
+  background: linear-gradient(180deg, #5d3fd3, #4a2fb8);
+  color: #ffd700;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+  font-family: 'Press Start 2P', monospace;
+  border: 1px solid #7d5fff;
+  box-shadow: 0 0 8px rgba(93, 63, 211, 0.5);
+}
 @keyframes pulse-critical {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
