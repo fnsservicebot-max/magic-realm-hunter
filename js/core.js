@@ -93,7 +93,7 @@ const GameCore = {
 
     // UI 每 500ms 更新（讓動畫更順）
     setInterval(() => {
-      if (typeof UI !== 'undefined') UI.updateUI();
+      this.updateUI();
     }, 500);
   },
 
